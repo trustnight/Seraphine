@@ -25,7 +25,7 @@ jobs:
           .\make.ps1
           echo "SUCCESS=true" >> $GITHUB_ENV
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # 更新到 v4
         if: ${{ env.SUCCESS }} == 'true'
         with:
           name: Seraphine
@@ -48,28 +48,16 @@ jobs:
         echo "VERSION=v$VERSION" >> $GITHUB_ENV
         echo "UPDATED=$UPDATED" >> $GITHUB_ENV
     - name: Download artifact
-      uses: actions/download-artifact@v3
-      if: env.UPDATED == 'true'
+      uses: actions/download-artifact@v4
       with:
         name: Seraphine
         path: ./
     - name: Push to release
       uses: ncipollo/release-action@v1
-      if: env.UPDATED == 'true'
       with:
         name: ${{ env.VERSION }}
         tag: ${{ env.VERSION }}
         token: ${{ secrets.GITHUB_TOKEN }}
-        replacesArtifacts: false
+        replacesArtifacts: true        # 修改为 true，允许覆盖现有制品
+        allowUpdates: true             # 允许更新现有 release
         artifacts: Seraphine.7z
-    - name: Sync to Gitee
-      if: env.UPDATED == 'true'
-      env:
-        GITEE_OWNER: Zzaphkiel
-        GITEE_REPO: seraphine
-        GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
-        GITEE_PASSWORD: ${{ secrets.GITEE_PASSWORD }}
-        GITEE_CLIENT_ID: ${{ secrets.GITEE_CLIENT_ID }}
-        GITEE_CLIENT_SECRET: ${{ secrets.GITEE_CLIENT_SECRET }}
-      run: |
-        python3 sync.py --tag "$VERSION"
